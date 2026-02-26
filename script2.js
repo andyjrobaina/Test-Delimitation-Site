@@ -5,6 +5,8 @@ const mapWrap = document.querySelector(".map-wrap");
 const tooltip = document.getElementById("tooltip");
 const beforeBtn = document.getElementById("beforeBtn");
 const afterBtn = document.getElementById("afterBtn");
+const adjustUiBtn = document.getElementById("adjustUiBtn");
+const saveUiBtn = document.getElementById("saveUiBtn");
 const controlsPanel = document.querySelector(".controls");
 const editPlacementBtn = document.getElementById("editPlacementBtn");
 const savePlacementBtn = document.getElementById("savePlacementBtn");
@@ -22,11 +24,11 @@ const FIXED_MAP_VIEWBOX_HEIGHT = 960;
 const LAYOUT_RANDOM_SEED = 0.3141592653589793;
 
 // Collision spacing controls puzzle-piece separation.
-const COLLISION_PADDING = 10;
+const COLLISION_PADDING = 16;
 const COLLISION_TICKS = 620;
 const COLLISION_ITERATIONS = 10;
 const AREA_RADIUS_FACTOR = 1.38;
-const BBOX_RADIUS_FACTOR = 0.5;
+const BBOX_RADIUS_FACTOR = 0.62;
 const LOSS_CLUSTER_X_RATIO = 0.27;
 const GAIN_CLUSTER_X_RATIO = 0.73;
 const CLUSTER_Y_RATIO = 0.58;
@@ -36,16 +38,91 @@ const CLUSTER_PACKING_DENSITY = 0.72;
 const MODES = ["before", "after"];
 const MANUAL_LAYOUT_STORAGE_KEY = "india-delimitation-layout-v2";
 const LABEL_LAYOUT_STORAGE_KEY = "india-delimitation-label-layout-v1";
+const CHROME_LAYOUT_STORAGE_KEY = "india-delimitation-chrome-layout-v1";
 const CLUSTER_CAPTION_TEXT = {
   loss: "States Losing Seats",
   gain: "States Gaining Seats",
 };
 const CLUSTER_CAPTION_MARGIN = 34;
 const LOCKED_CAPTION_OFFSET_BY_SIDE = {
-  loss: { dx: -25.80000000000001, dy: -6.18716258997074 },
-  gain: { dx: -36.200000000000045, dy: 70.79905774971428 },
+  loss: { dx: 45.14428235878427, dy: -37.72887403358891 },
+  gain: { dx: 7.592397105437158, dy: 64.08519800875752 },
 };
-const LOCKED_CONTROLS_OFFSET = { dx: 251, dy: 3 };
+const LOCKED_CONTROLS_OFFSET = { dx: 330, dy: 10 };
+const LOCKED_LAYOUT_BY_MODE = {
+  before: {
+    "West Bengal": { dx: -494.86066997356727, dy: -115.95566388641447 },
+    Punjab: { dx: -276.77752754999256, dy: 114.99499560519467 },
+    Karnataka: { dx: -135.629509548817, dy: -206.81627452897283 },
+    "Tamil Nadu": { dx: -66.54729614961775, dy: -362.38957842339954 },
+    "Andhra Pradesh": { dx: -450.8849027667934, dy: -126.30096489702731 },
+    Telangana: { dx: -342.29964852210253, dy: 13.70969139234927 },
+    Uttarakhand: { dx: -461.6640501155264, dy: 185.49947919778492 },
+    Odisha: { dx: -235.54642748279423, dy: 58.502104493418756 },
+    "Himachal Pradesh": { dx: -77.36812873717633, dy: 116.75605666538542 },
+    Kerala: { dx: -160.49367099137908, dy: -173.30299551607868 },
+    "Uttar Pradesh": { dx: 242.82609474324568, dy: 108.95219112710919 },
+    Rajasthan: { dx: 634.824879550356, dy: 61.581540807039005 },
+    Chhattisgarh: { dx: 332.9202013830193, dy: 65.74707025519581 },
+    Haryana: { dx: 380.1826069011678, dy: 318.5003181937307 },
+    Gujarat: { dx: 863.0777946365274, dy: -123.39858506437906 },
+    "Madhya Pradesh": { dx: 573.3603031365639, dy: 174.91268690434754 },
+    Jharkhand: { dx: 479.97431446448707, dy: 49.27062214211668 },
+    Bihar: { dx: 173.7587358474152, dy: -41.11020784864439 },
+  },
+  after: {
+    "West Bengal": { dx: -538.7977732450516, dy: -21.822942939148845 },
+    Punjab: { dx: -281.2128913195238, dy: 168.41937304660092 },
+    Karnataka: { dx: -227.16439114061387, dy: -127.69460094498845 },
+    "Tamil Nadu": { dx: -207.51766358125838, dy: -316.00948198785267 },
+    "Andhra Pradesh": { dx: -482.99549465522114, dy: -87.39700371538669 },
+    Telangana: { dx: -388.7018396842119, dy: 9.97159324781802 },
+    Uttarakhand: { dx: -395.76009656328023, dy: 229.8499125473943 },
+    Odisha: { dx: -311.719950432013, dy: 8.011442872325006 },
+    "Himachal Pradesh": { dx: -174.85875984069196, dy: 216.27992141147917 },
+    Kerala: { dx: -139.13222079606658, dy: -163.84553701998493 },
+    "Uttar Pradesh": { dx: 177.45713722371443, dy: 166.4428222306248 },
+    Rajasthan: { dx: 603.6401871675434, dy: 65.01693509414838 },
+    Chhattisgarh: { dx: 293.3111925939568, dy: 172.4333495520708 },
+    Haryana: { dx: 268.92058297538654, dy: 433.00208821326197 },
+    Gujarat: { dx: 813.5762077224649, dy: -204.24726365324625 },
+    "Madhya Pradesh": { dx: 608.0132572381264, dy: 247.96798475591004 },
+    Jharkhand: { dx: 511.98517872229957, dy: 61.71709431008543 },
+    Bihar: { dx: 77.54090137475896, dy: -66.23941927442564 },
+  },
+};
+const LOCKED_LABEL_OFFSETS_BY_MODE = {
+  before: {
+    Punjab: { dx: 5.216688618969783, dy: 9.416015132467578 },
+    "Uttar Pradesh": { dx: 8.221875651832306, dy: 12.862701439679142 },
+    "Andhra Pradesh": { dx: -11.441077568523838, dy: -5.446139395637999 },
+    Karnataka: { dx: -20.82178773982315, dy: 1.621769196614082 },
+    Kerala: { dx: 6.614918065847974, dy: 0.5809504450746772 },
+    Chhattisgarh: { dx: -12.80232399813201, dy: -2.4047369153606724 },
+    Odisha: { dx: 3.977012800697935, dy: -10.463896558055069 },
+    Bihar: { dx: 0.2512516116103143, dy: 8.33609767259378 },
+    Rajasthan: { dx: -5.119438223537145, dy: 4.4432034988110445 },
+    Jharkhand: { dx: -16.749713305496698, dy: 8.470665939091418 },
+    Haryana: { dx: 6.495263214330407, dy: 3.709072678440407 },
+  },
+  after: {
+    Punjab: { dx: 3.7966434098024138, dy: 1.9418433044035623 },
+    "Uttar Pradesh": { dx: 13.8270736250563, dy: 10.427232120379529 },
+    "Andhra Pradesh": { dx: -11.441077568523838, dy: -12.446139395638 },
+    Karnataka: { dx: -9.426884081582045, dy: 6.153628895855718 },
+    Kerala: { dx: 6.614918065847974, dy: -5.419049554925323 },
+    Chhattisgarh: { dx: -16.80232399813201, dy: -5.404736915360672 },
+    Odisha: { dx: 0.9770128006979348, dy: -9.463896558055069 },
+    Haryana: { dx: 7.446761176188829, dy: -0.7587156600437766 },
+    "Madhya Pradesh": { dx: 2.658851281830266, dy: 18.198046664912795 },
+    Jharkhand: { dx: -10.447515460398563, dy: 0.40564907018608665 },
+    Gujarat: { dx: 9.744680179538136, dy: -9.396520808516698 },
+    "West Bengal": { dx: -3.435440356882623, dy: 8.782791456294774 },
+    "Himachal Pradesh": { dx: 1.711046640623067, dy: -6.736396503243327 },
+    Uttarakhand: { dx: 3.2198220263837243, dy: -3.085771285853866 },
+  },
+};
+const PLACEMENT_EDIT_LOCKED = true;
 
 // Hardcode your seats here by state name.
 // Any state not listed here will show as N/A.
@@ -197,6 +274,8 @@ let clusterAnchorPlan = null;
 let currentMode = "before";
 let mapViewport = { width: 0, height: 0 };
 let isPlacementEditMode = false;
+let isChromeEditMode = false;
+let isChromeEditLocked = false;
 
 init();
 
@@ -232,6 +311,7 @@ async function init() {
     loadManualOverridesFromStorage();
     computeLayouts();
     loadLabelOffsetsFromStorage();
+    loadChromeLayoutFromStorage();
     renderMap();
     wireControls();
     applyControlsOffset();
@@ -709,19 +789,43 @@ function renderMap() {
 function wireControls() {
   beforeBtn.addEventListener("click", () => applyMode("before", { animate: true }));
   afterBtn.addEventListener("click", () => applyMode("after", { animate: true }));
-  if (editPlacementBtn) {
+  if (adjustUiBtn) {
+    adjustUiBtn.addEventListener("click", () => {
+      if (isChromeEditLocked) return;
+      setChromeEditMode(!isChromeEditMode);
+    });
+  }
+  if (saveUiBtn) {
+    saveUiBtn.addEventListener("click", () => {
+      if (isChromeEditLocked || !isChromeEditMode) return;
+      persistChromeLayoutToStorage({ locked: true });
+      isChromeEditLocked = true;
+      setChromeEditMode(false);
+    });
+  }
+  if (controlsPanel) {
+    d3.select(controlsPanel).call(
+      d3
+        .drag()
+        .filter(() => isChromeEditMode)
+        .on("start", onControlsDragStart)
+        .on("drag", onControlsDrag)
+        .on("end", onControlsDragEnd)
+    );
+  }
+  if (!PLACEMENT_EDIT_LOCKED && editPlacementBtn) {
     editPlacementBtn.addEventListener("click", () => {
       setPlacementEditMode(!isPlacementEditMode);
     });
   }
-  if (savePlacementBtn) {
+  if (!PLACEMENT_EDIT_LOCKED && savePlacementBtn) {
     savePlacementBtn.addEventListener("click", () => {
       persistManualOverridesToStorage();
       persistLabelOffsetsToStorage();
       setPlacementEditMode(false);
     });
   }
-  if (resetPlacementBtn) {
+  if (!PLACEMENT_EDIT_LOCKED && resetPlacementBtn) {
     resetPlacementBtn.addEventListener("click", () => {
       clearManualOverrides(false, currentMode);
       clearLabelOffsets(false, currentMode);
@@ -732,6 +836,7 @@ function wireControls() {
       setPlacementEditMode(false);
     });
   }
+  setChromeEditMode(false);
   setPlacementEditMode(false);
   window.addEventListener("resize", debounce(reprojectMap, 140));
 }
@@ -762,7 +867,11 @@ function setScenarioSelection(mode) {
 }
 
 function setPlacementEditMode(isEditing) {
-  isPlacementEditMode = Boolean(isEditing);
+  if (PLACEMENT_EDIT_LOCKED) {
+    isPlacementEditMode = false;
+  } else {
+    isPlacementEditMode = Boolean(isEditing);
+  }
 
   if (statePaths) {
     statePaths.classed("is-editing", isPlacementEditMode);
@@ -773,19 +882,56 @@ function setPlacementEditMode(isEditing) {
 
   if (editPlacementBtn) {
     editPlacementBtn.classList.toggle("is-selected", isPlacementEditMode);
+    editPlacementBtn.disabled = PLACEMENT_EDIT_LOCKED;
   }
   if (savePlacementBtn) {
-    savePlacementBtn.disabled = !isPlacementEditMode;
+    savePlacementBtn.disabled = PLACEMENT_EDIT_LOCKED || !isPlacementEditMode;
+  }
+  if (resetPlacementBtn) {
+    resetPlacementBtn.disabled = PLACEMENT_EDIT_LOCKED;
   }
   updatePlacementStatus();
 }
 
 function updatePlacementStatus() {
   if (!placementStatus) return;
+  if (PLACEMENT_EDIT_LOCKED) {
+    placementStatus.textContent =
+      "Placements are locked for both before and after delimitation.";
+    return;
+  }
   const modeLabel = currentMode === "before" ? "Before Delimitation" : "After Delimitation";
   placementStatus.textContent = isPlacementEditMode
-    ? `${modeLabel} placement editable. Drag states/labels, then click Save Placement.`
-    : `${modeLabel} placement locked`;
+    ? `${modeLabel} is editable. Drag states and labels, then click Save Placement to store this mode.`
+    : `${modeLabel} is locked. Before and after placements are saved independently. Switch modes to adjust each separately.`;
+}
+
+function setChromeEditMode(isEditing) {
+  if (isChromeEditLocked) {
+    isChromeEditMode = false;
+  } else {
+    isChromeEditMode = Boolean(isEditing);
+  }
+
+  if (controlsPanel) {
+    controlsPanel.classList.toggle("is-ui-editing", isChromeEditMode);
+    controlsPanel.classList.remove("dragging");
+  }
+  if (captionLayer) {
+    captionLayer.classed("is-ui-editing", isChromeEditMode);
+  }
+  if (captionTexts) {
+    captionTexts.classed("dragging", false);
+  }
+
+  if (adjustUiBtn) {
+    adjustUiBtn.textContent = isChromeEditLocked ? "UI Saved" : "Adjust UI";
+    adjustUiBtn.classList.toggle("is-selected", isChromeEditMode);
+    adjustUiBtn.disabled = isChromeEditLocked;
+  }
+  if (saveUiBtn) {
+    saveUiBtn.disabled = isChromeEditLocked || !isChromeEditMode;
+  }
 }
 
 function updateLabels(options = {}) {
@@ -825,7 +971,15 @@ function renderClusterCaptions() {
     .append("text")
     .attr("class", "cluster-caption")
     .attr("transform", (d) => captionPositionToTransform(getCaptionPosition(d.key)))
-    .text((d) => d.text);
+    .text((d) => d.text)
+    .call(
+      d3
+        .drag()
+        .filter(() => isChromeEditMode)
+        .on("start", onCaptionDragStart)
+        .on("drag", onCaptionDrag)
+        .on("end", onCaptionDragEnd)
+    );
 }
 
 function updateClusterCaptions(options = {}) {
@@ -873,6 +1027,47 @@ function getCaptionPosition(side) {
     x: base.x + toFinite(offset.dx),
     y: base.y + toFinite(offset.dy),
   };
+}
+
+function onControlsDragStart() {
+  if (!isChromeEditMode) return;
+  hideTooltip();
+  d3.select(this).classed("dragging", true);
+}
+
+function onControlsDrag(event) {
+  if (!isChromeEditMode) return;
+  controlsOffset.dx = toFinite(controlsOffset.dx) + toFinite(event.dx);
+  controlsOffset.dy = toFinite(controlsOffset.dy) + toFinite(event.dy);
+  applyControlsOffset();
+}
+
+function onControlsDragEnd() {
+  if (!isChromeEditMode) return;
+  d3.select(this).classed("dragging", false);
+}
+
+function onCaptionDragStart() {
+  if (!isChromeEditMode) return;
+  hideTooltip();
+  d3.select(this).classed("dragging", true);
+}
+
+function onCaptionDrag(event, d) {
+  if (!isChromeEditMode) return;
+  const base = getCaptionBasePosition(d.key);
+  const x = toFinite(event.x);
+  const y = toFinite(event.y);
+  captionOffsetBySide[d.key] = {
+    dx: x - base.x,
+    dy: y - base.y,
+  };
+  d3.select(this).attr("transform", captionPositionToTransform({ x, y }));
+}
+
+function onCaptionDragEnd() {
+  if (!isChromeEditMode) return;
+  d3.select(this).classed("dragging", false);
 }
 
 function getLabelAnchor(stateName, mode = currentMode) {
@@ -995,15 +1190,7 @@ function applyManualOverridesToLayouts() {
 function loadManualOverridesFromStorage() {
   clearManualOverrides(false);
 
-  let parsed;
-  try {
-    const raw = localStorage.getItem(MANUAL_LAYOUT_STORAGE_KEY);
-    if (!raw) return;
-    parsed = JSON.parse(raw);
-  } catch (error) {
-    console.warn("Could not parse saved manual layout.", error);
-    return;
-  }
+  const parsed = LOCKED_LAYOUT_BY_MODE;
 
   for (const mode of MODES) {
     const modeEntries = parsed && typeof parsed === "object" ? parsed[mode] : null;
@@ -1059,15 +1246,7 @@ function clearManualOverrides(removeStorage = true, mode = null) {
 function loadLabelOffsetsFromStorage() {
   clearLabelOffsets(false);
 
-  let parsed;
-  try {
-    const raw = localStorage.getItem(LABEL_LAYOUT_STORAGE_KEY);
-    if (!raw) return;
-    parsed = JSON.parse(raw);
-  } catch (error) {
-    console.warn("Could not parse saved label layout.", error);
-    return;
-  }
+  const parsed = LOCKED_LABEL_OFFSETS_BY_MODE;
 
   if (!parsed || typeof parsed !== "object") return;
 
@@ -1136,6 +1315,47 @@ function clearLabelOffsets(removeStorage = true, mode = null) {
     } catch (error) {
       console.warn("Could not clear saved label layout.", error);
     }
+  }
+}
+
+function loadChromeLayoutFromStorage() {
+  controlsOffset.dx = toFinite(LOCKED_CONTROLS_OFFSET.dx);
+  controlsOffset.dy = toFinite(LOCKED_CONTROLS_OFFSET.dy);
+  captionOffsetBySide.loss = {
+    dx: toFinite(LOCKED_CAPTION_OFFSET_BY_SIDE.loss.dx),
+    dy: toFinite(LOCKED_CAPTION_OFFSET_BY_SIDE.loss.dy),
+  };
+  captionOffsetBySide.gain = {
+    dx: toFinite(LOCKED_CAPTION_OFFSET_BY_SIDE.gain.dx),
+    dy: toFinite(LOCKED_CAPTION_OFFSET_BY_SIDE.gain.dy),
+  };
+  isChromeEditLocked = true;
+}
+
+function persistChromeLayoutToStorage(options = {}) {
+  const { locked = isChromeEditLocked } = options;
+  const payload = {
+    locked: Boolean(locked),
+    controls: {
+      dx: toFinite(controlsOffset.dx),
+      dy: toFinite(controlsOffset.dy),
+    },
+    captions: {
+      loss: {
+        dx: toFinite((captionOffsetBySide.loss || {}).dx),
+        dy: toFinite((captionOffsetBySide.loss || {}).dy),
+      },
+      gain: {
+        dx: toFinite((captionOffsetBySide.gain || {}).dx),
+        dy: toFinite((captionOffsetBySide.gain || {}).dy),
+      },
+    },
+  };
+
+  try {
+    localStorage.setItem(CHROME_LAYOUT_STORAGE_KEY, JSON.stringify(payload));
+  } catch (error) {
+    console.warn("Could not save UI layout.", error);
   }
 }
 

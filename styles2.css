@@ -3,6 +3,10 @@
   --ink: #123567;
 }
 
+html {
+  scrollbar-gutter: stable both-edges;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -12,6 +16,7 @@ body {
   font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
   font-weight: 400;
   background: var(--panel);
+  overflow-x: hidden;
 }
 
 .article-page {
@@ -19,7 +24,7 @@ body {
 }
 
 .article-copy {
-  width: min(52vw, 760px);
+  width: min(52%, 760px);
   margin-left: auto;
   margin-right: auto;
   font-family: "Times New Roman", Times, serif;
@@ -59,9 +64,9 @@ body {
 }
 
 .graphic-band {
-  width: 100vw;
-  margin-left: calc(50% - 50vw);
-  margin-right: calc(50% - 50vw);
+  width: 100%;
+  margin-left: 0;
+  margin-right: 0;
   margin-top: 1.2rem;
   margin-bottom: 1.9rem;
 }
@@ -83,6 +88,14 @@ body {
   cursor: default;
 }
 
+.controls.is-ui-editing {
+  cursor: grab;
+}
+
+.controls.is-ui-editing.dragging {
+  cursor: grabbing;
+}
+
 .toolbar {
   display: flex;
   justify-content: flex-start;
@@ -92,6 +105,7 @@ body {
 
 button {
   font: inherit;
+  line-height: 1.2;
   border: 1px solid #b8c9ea;
   background: #f8fbff;
   color: var(--ink);
@@ -127,12 +141,15 @@ button.is-selected {
 #indiaMap {
   width: 100%;
   height: 100%;
+  display: block;
 }
 
 .state {
   stroke: #000000;
   stroke-width: 0.8;
   stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  shape-rendering: geometricPrecision;
   transition: stroke-width 0.2s ease;
 }
 
@@ -190,6 +207,10 @@ button.is-selected {
   pointer-events: none;
 }
 
+.cluster-captions.is-ui-editing {
+  pointer-events: all;
+}
+
 .cluster-caption {
   fill: #0f2f66;
   stroke: #ffffff;
@@ -202,6 +223,14 @@ button.is-selected {
   dominant-baseline: central;
   cursor: default;
   user-select: none;
+}
+
+.cluster-captions.is-ui-editing .cluster-caption {
+  cursor: grab;
+}
+
+.cluster-captions.is-ui-editing .cluster-caption.dragging {
+  cursor: grabbing;
 }
 
 .tooltip {
@@ -223,7 +252,7 @@ button.is-selected {
 
 @media (max-width: 768px) {
   .article-copy {
-    width: min(92vw, 700px);
+    width: min(92%, 700px);
   }
 
   .controls {
