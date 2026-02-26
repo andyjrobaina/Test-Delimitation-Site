@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Delimitation Article Title</title>
+    <link rel="stylesheet" href="styles2.css?v=6" />
+  </head>
+  <body>
+    <main class="article-page">
+      <h1 class="page-title article-copy">Delimitation Article Title</h1>
+      <h2 class="page-subtitle article-copy">Delimitation Article Subtitle</h2>
+
+      <p id="placeholderTop" class="article-copy article-paragraph"></p>
+
+      <section class="graphic-band" aria-label="Delimitation graphic">
+        <div class="map-shell">
+          <div class="controls">
+            <div class="toolbar">
+              <button id="beforeBtn" type="button">Before Delimitation</button>
+              <button id="afterBtn" type="button">After Delimitation</button>
+            </div>
+          </div>
+
+          <div class="map-wrap">
+            <svg id="indiaMap" aria-label="Map of India states"></svg>
+            <div id="tooltip" class="tooltip" role="status" aria-live="polite"></div>
+          </div>
+        </div>
+      </section>
+
+      <p id="placeholderBottom" class="article-copy article-paragraph"></p>
+    </main>
+
+    <script>
+      const placeholderSentence = "This is a placeholder paragraph.";
+      const paragraphText = Array.from({ length: 54 }, () => placeholderSentence).join(" ");
+      document.getElementById("placeholderTop").textContent = paragraphText;
+      document.getElementById("placeholderBottom").textContent = paragraphText;
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script src="india_telengana_data2.js?v=1"></script>
+    <script src="script2.js?v=20"></script>
+  </body>
+</html>
